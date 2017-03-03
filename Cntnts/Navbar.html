@@ -1,0 +1,33 @@
+<div style="height: 72px;"></div>
+<header id="NAVBAR" class="navbar fixed inverted shadow">
+    <!--<div class="navbar inverted container grid-960">-->
+    <section class="navbar-section">
+        <a href="{NAVBARLEFT_LINK}" class="navbar-brand navbar-brand2">
+            <span class="icon mdi">{NAVBARLEFT_ICON}</span> Da_Blog
+        </a>
+    </section>
+    {NAVBAR_MENU{{NAVBAR_MENU_li{
+    <section class="navbar-section dropdown">
+        <button class="btn btn-primary dropdown-toggle" tabindex="0">
+            <span class="mdi">menu</span>
+            <!--<figure class="avatar avatar-sm" data-initial="XY" style="background-color: #5764c6;"></figure>-->
+        </button>
+        <ul class="menu menu-right">
+            <li class="menu-item">Hi, {USER_NAME} :)</li>
+            {NAVBAR_LINKS_LI}
+            <li class="divider"></li>
+            <li class="menu-item"><a href="?logout=true">Logout</a></li>
+        </ul>
+    </section>}/NAVBAR_MENU_li} {NAVBAR_MENU_lo{
+    <section class="navbar-section dropdown">
+        <button class="btn btn-primary dropdown-toggle" tabindex="0">
+            <span class="mdi">menu</span>
+            <!--<figure class="avatar avatar-sm" data-initial="XY" style="background-color: #5764c6;"></figure>-->
+        </button>
+        <ul class="menu menu-right">
+            <li class="divider"></li>
+            <li class="menu-item"><a href="/login">Login</a></li>
+        </ul>
+    </section>}/NAVBAR_MENU_lo}}/NAVBAR_MENU}
+    <!--</div>-->
+</header>

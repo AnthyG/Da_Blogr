@@ -1,0 +1,46 @@
+<style>
+    #TOASTAINER {
+        position: fixed;
+        top: 6rem;
+        min-width: 36rem;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    #TOASTAINER .toast {
+        margin-top: 5px;
+    }
+</style>
+<div id="TOASTAINER">
+    <!--{TOASTS}-->
+</div>
+<div id="COPYTOASTAINER" style="display: none;">
+    <div id="COPYTOAST" class="toast" style="display: none;">
+        <button class="btn btn-clear float-right closerer"></button>
+        <div class="content"></div>
+    </div>
+</div>
+</body>
+<script>
+    function CopyToast(text, classes, id, timeout) {
+        if (text !== '') {
+            var clone = $('#COPYTOAST').clone();
+            clone.attr('id', id || '');
+            clone.addClass(classes);
+            clone.children('.content').html(text);
+            clone.prependTo($('#TOASTAINER')).slideDown().fadeIn();
+            clone.find('.closerer').on('click', function() {
+                $(this).parent().slideUp().fadeOut(function() {
+                    $(this).remove();
+                });
+            });
+            setTimeout(function() {
+                clone.slideUp().fadeOut(function() {
+                    clone.remove();
+                });
+            }, timeout || 5000);
+        }
+    }
+</script>
+
+</html>
