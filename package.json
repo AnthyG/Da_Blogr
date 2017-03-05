@@ -1,6 +1,6 @@
 {
     "name": "da_blogr",
-    "version": "0.0.7",
+    "version": "0.0.10",
     "description": "A simple Blogging-Platform.",
     "main": "index.js",
     "scripts": {

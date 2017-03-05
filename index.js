@@ -303,7 +303,12 @@ app.get('/b/:blogr', function(req, res) {
         var blogslist_HTML = '<ul>';
         for (var Bx in jsonF_L[blogr]["blogs"]) {
             var By = jsonF_L[blogr]["blogs"][Bx];
-            blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '">' + Bx + '</a></li>';
+            blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '">' + Bx + '</a><ul>';
+            for (var Ex in By["entries"]) {
+                var Ey = By["entries"][Ex];
+                blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '/' + Ex + '">' + Ey["created"]["year"] + '-' + Ey["created"]["month"] + '-' + Ey["created"]["day"] + ' - ' + Ey["title"] + '</a>';
+            }
+            blogslist_HTML += '</ul></li>';
         };
         blogslist_HTML += '</ul>';
 
@@ -315,7 +320,7 @@ app.get('/b/:blogr', function(req, res) {
             .replace(/\{BLOGS_LIST\}/gm, blogslist_HTML)
             .replace(/\{BLOGR_NAME\}/gm, blogr), req));
     } else {
-        res.send('No blogr <i>' + blogr + '</i>');
+        res.send('No blogr <i>' + blogr + '</i><br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
     }
 });
 
@@ -333,7 +338,8 @@ app.get('/b/:blogr/:blogid', function(req, res) {
             var A_topcntnt_HTML = '',
                 B_topcntnt_HTML = '',
                 A_bottomcntnt_HTML = '',
-                B_bottomcntnt_HTML = '';
+                B_bottomcntnt_HTML = '',
+                entrycreator_HTML = '';
 
             if (isLI(req)) {
                 var user_name = req.session.user_name;
@@ -343,12 +349,15 @@ app.get('/b/:blogr/:blogid', function(req, res) {
                 }
                 // B_topcntnt_HTML = HTML_B_topcntnt_3();
                 // B_bottomcntnt_HTML = HTML_B_bottomcntnt_3();
+                if (user_name === blogr) {
+                    entrycreator_HTML = HTML_entrycreator();
+                }
             }
 
             var entrieslist_HTML = '<ul>';
             for (var Ex in jsonF_L[blogr]["blogs"][blogid]["entries"]) {
                 var Ey = jsonF_L[blogr]["blogs"][blogid]["entries"][Ex];
-                entrieslist_HTML += '<li><a href="/b/' + blogr + '/' + blogid + '/' + Ex + '">' + Ey.title + '</a></li>';
+                entrieslist_HTML += '<li><a href="/b/' + blogr + '/' + blogid + '/' + Ex + '">' + Ey["created"]["year"] + '-' + Ey["created"]["month"] + '-' + Ey["created"]["day"] + ' - ' + Ey["title"] + '</a></li>';
             }
             entrieslist_HTML += '</ul>';
 
@@ -357,20 +366,15 @@ app.get('/b/:blogr/:blogid', function(req, res) {
                 .replace(/\{B_topcntnt\}/, B_topcntnt_HTML)
                 .replace(/\{A_bottomcntnt\}/, A_bottomcntnt_HTML)
                 .replace(/\{B_bottomcntnt\}/, B_bottomcntnt_HTML)
-                .replace(/\{ENTRYCREATOR\}/gm, HTML_entrycreator())
+                .replace(/\{ENTRYCREATOR\}/gm, entrycreator_HTML)
                 .replace(/\{ENTRIES_LIST\}/gm, entrieslist_HTML)
                 .replace(/\{BLOGR_NAME\}/gm, blogr)
                 .replace(/\{BLOG_NAME\}/gm, blogid), req));
-            // res.send({
-            //     "blogr": blogr,
-            //     "blogid": blogid,
-            //     "entries": jsonF_L[blogr]["blogs"][blogid]["entries"]
-            // });
         } else {
-            res.send('Blogr <i>' + blogr + '</i> has no blog <i>' + blogid + '</i>');
+            res.send('Blogr <i>' + blogr + '</i> has no blog <i>' + blogid + '</i><br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
         }
     } else {
-        res.send('No blogr <i>' + blogr + '</i>');
+        res.send('No blogr <i>' + blogr + '</i><br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
     }
 });
 
@@ -388,7 +392,10 @@ app.get('/b/:blogr/:blogid/:entryid', function(req, res) {
                 var entry = jsonF_L[blogr]["blogs"][blogid]["entries"][entryid];
 
                 var title = entry["title"];
-                var rpath = dir + 'DB/Blogs/' + blogr + '/' + blogid + '/' + entry["created"]["year"] + '-' + entry["created"]["month"] + '-' + entry["created"]["day"] + '-' + title;
+                var c_year = entry["created"]["year"],
+                    c_month = entry["created"]["month"],
+                    c_day = entry["created"]["day"];
+                var rpath = dir + 'DB/Blogs/' + blogr + '/' + blogid + '/' + c_year + '-' + c_month + '-' + c_day + '-' + title;
                 var cntnts = fs.readFileSync(rpath, 'utf8');
 
                 var sHTML = HTML_blogrs_blogs_entry();
@@ -396,21 +403,19 @@ app.get('/b/:blogr/:blogid/:entryid', function(req, res) {
                     .replace(/\{CONTENT\}/gm, cntnts)
                     .replace(/\{BLOGR_NAME\}/gm, blogr)
                     .replace(/\{BLOG_NAME\}/gm, blogid)
+                    .replace(/\{ENTRY_year\}/gm, c_year)
+                    .replace(/\{ENTRY_month\}/gm, c_month)
+                    .replace(/\{ENTRY_day\}/gm, c_day)
                     .replace(/\{ENTRY_ID\}/gm, entryid)
                     .replace(/\{ENTRY_TITLE\}/gm, title), req));
-                // res.send({
-                //     "blogr": blogr,
-                //     "blogid": blogid,
-                //     "entryid": entryid
-                // });
             } else {
-                res.send('Blog <i>' + blogid + '</i> by Blogr <i>' + blogr + '</i> has no Entry <i>' + entryid + '</i>');
+                res.send('Blog <i>' + blogid + '</i> by Blogr <i>' + blogr + '</i> has no Entry <i>' + entryid + '</i><br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
             }
         } else {
-            res.send('Blogr <i>' + blogr + '</i> has no blog <i>' + blogid + '</i>');
+            res.send('Blogr <i>' + blogr + '</i> has no blog <i>' + blogid + '</i><br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
         }
     } else {
-        res.send('No blogr <i>' + blogr + '</i>');
+        res.send('No blogr <i>' + blogr + '</i><br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
     }
 });
 
@@ -448,29 +453,28 @@ app.post('/mb/ecreate/:blogid', function(req, res) {
                     d = dt.getDate();
 
                 var wpath = dir + 'DB/Blogs/' + unameL + '/' + blogid + '/' + y + '-' + m + '-' + d + '-' + entry_title;
-                fs.writeFileSync(wpath, entry_cntnts, 'utf8');
+                if (!fs.existsSync(wpath)) {
+                    fs.writeFileSync(wpath, entry_cntnts, 'utf8');
 
-                jsonF_L[unameL]["blogs"][blogid]["entries"].push({
-                    "title": entry_title,
-                    "created": {
-                        "year": y,
-                        "month": m,
-                        "day": d
-                    }
-                });
+                    jsonF_L[unameL]["blogs"][blogid]["entries"].push({
+                        "title": entry_title,
+                        "created": {
+                            "year": y,
+                            "month": m,
+                            "day": d
+                        }
+                    });
 
-                var wpath2 = dir + 'DB/Login.json';
-                console.log("\n" + Date().toString() + ":\n" + JSON.stringify(jsonF_L));
-                fs.writeFileSync(wpath2, JSON.stringify(jsonF_L), 'utf8');
+                    var wpath2 = dir + 'DB/Login.json';
+                    console.log("\n" + Date().toString() + ":\n" + JSON.stringify(jsonF_L));
+                    fs.writeFileSync(wpath2, JSON.stringify(jsonF_L), 'utf8');
 
-                res.redirect('/b/' + unameL + '/' + blogid + '?posted');
-
-                // res.send({
-                //     "blogr": unameL,
-                //     "blogid": blogid
-                // });
+                    res.redirect('/b/' + unameL + '/' + blogid + '?posted');
+                } else {
+                    res.send('blog <i>' + blogid + '</i> does already have an entry <i>' + entry_title + '</i> created on <i>' + y + '-' + m + '-' + d + '</i>!<br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
+                }
             } else {
-                res.send('invalid input!');
+                res.send('invalid input!<br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
             }
         });
     } else {
@@ -534,10 +538,10 @@ app.post('/mb/create', function(req, res) {
                         res.redirect('/b/' + unameL + '/' + blog_name + '?created');
                     });
                 } else {
-                    res.send('blog <i>' + blog_name + '</i> does already exist!');
+                    res.send('blog <i>' + blog_name + '</i> does already exist!<br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
                 }
             } else {
-                res.send('invalid input!');
+                res.send('invalid input!<br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
             }
         });
     } else {
@@ -592,10 +596,10 @@ app.post('/mbs', function(req, res) {
 
                     res.redirect('/mbs?success');
                 } else {
-                    res.send('blogr <i>' + user_name + '</i> does already exist!');
+                    res.send('blogr <i>' + user_name + '</i> does already exist!<br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
                 }
             } else {
-                res.send('invalid input!');
+                res.send('invalid input!<br><a class="btn btn-primary" href="javascript:history.back()">Back</a>');
             }
         });
     } else {
@@ -653,14 +657,14 @@ app.post('/login', function(req, res) {
                         .replace(/\{\{\{CNTNTS\}\}\}/gm, '<div class="container grid-960">Invalid Credentials: <pre>{' +
                             '\n&nbsp&nbsp&nbsp&nbspuser_name: ' + post.user_name +
                             '\n&nbsp&nbsp&nbsp&nbsptryadmin: ' + tryadmin +
-                            '\n}</pre><br><a class="btn btn-primary" href="">Back</a><div>'));
+                            '\n}</pre><br><a class="btn btn-primary" href="javascript:history.back()">Back</a><div>'));
                 }
             } else {
                 res.send(HTML_HEADEr()
                     .replace(/\{\{\{CNTNTS\}\}\}/gm, '<div class="container grid-960">Invalid Credentials: <pre>{' +
                         '\n&nbsp&nbsp&nbsp&nbspuser_name: ' + post.user_name +
                         '\n&nbsp&nbsp&nbsp&nbsptryadmin: ' + tryadmin +
-                        '\n}</pre><br><a class="btn btn-primary" href="">Back</a><div>'));
+                        '\n}</pre><br><a class="btn btn-primary" href="javascript:history.back()">Back</a><div>'));
             }
         });
     }

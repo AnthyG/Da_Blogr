@@ -235,3 +235,12 @@ body {
 .form-autocomplete .menu:hover {
     display: block;
 }
+
+.editor-toolbar.fullscreen,
+.editor-preview-side {
+    top: 72px;
+}
+
+.CodeMirror-fullscreen {
+    top: 122px;
+}

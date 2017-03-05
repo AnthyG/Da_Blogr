@@ -2,7 +2,26 @@
 <div class="container grid-960">
     <div class="container shadow mb-10">
         <h2 style="padding-top: .5rem;"><b>{ENTRY_TITLE}</b></h2>
+        <blockquote>
+            <p>{ENTRY_year}-{ENTRY_month}-{ENTRY_day} in <b>{BLOG_NAME}</b></p>
+            <cite>by {BLOGR_NAME}</cite>
+        </blockquote>
+        <div id="CNTNTS" class="container mb-10" style="padding-top: 1em;">
+            {CONTENT}
+        </div>
     </div>
-    {CONTENT}
 </div>
 <p></p>
+<script>
+    marked.setOptions({
+        "sanitize": true,
+        "smartypants": true,
+        "breaks": true
+    });
+    $cntnts = $('#CNTNTS');
+    $(document).ready(function() {
+        var curcntnt = $cntnts.html();
+        // console.log(curcntnt);
+        $cntnts.html(marked(curcntnt));
+    });
+</script>
