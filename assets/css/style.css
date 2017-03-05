@@ -213,6 +213,11 @@ body {
 }
 
 
+/*.table th {
+    border-bottom: .2em solid;
+}*/
+
+
 /*.card.collapsed>*:not(.card-header),
 .card.collapsed>.card-header>*:not(.card-title2) {
     transition: all .15s ease;

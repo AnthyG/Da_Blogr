@@ -3,8 +3,8 @@
     <div class="container shadow mb-10">
         <h2 style="padding-top: .5rem;"><b>{ENTRY_TITLE}</b></h2>
         <blockquote>
-            <p>{ENTRY_year}-{ENTRY_month}-{ENTRY_day} in <b>{BLOG_NAME}</b></p>
-            <cite>by {BLOGR_NAME}</cite>
+            <p>{ENTRY_year}-{ENTRY_month}-{ENTRY_day} {ENTRY_hours}:{ENTRY_minutes}:{ENTRY_seconds} in <b><a href="/b/{BLOGR_NAME}/{BLOG_NAME}">{BLOG_NAME}</a></b></p>
+            <cite>by <a href="/b/{BLOGR_NAME}">{BLOGR_NAME}</a></cite>
         </blockquote>
         <div id="CNTNTS" class="container mb-10" style="padding-top: 1em;">
             {CONTENT}
@@ -18,10 +18,54 @@
         "smartypants": true,
         "breaks": true
     });
+
+    var markedR = new marked.Renderer();
+    markedR.table = function(header, body) {
+        return '<table class="table table-striped">\n' +
+            '<thead>\n' +
+            header +
+            '</thead>\n' +
+            '<tbody>\n' +
+            body +
+            '</tbody>\n' +
+            '</table>\n';
+    };
+    markedR.link = function(href, title, text) {
+        var href = href || '',
+            title = title || '',
+            text = text || '';
+
+        if (this.options.sanitize) {
+            try {
+                var prot = decodeURIComponent(unescape(href))
+                    .replace(/[^\w:]/g, '')
+                    .toLowerCase();
+            } catch (e) {
+                return '';
+            }
+            if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0 || prot.indexOf('data:') === 0) {
+                return '';
+            }
+        }
+
+        return '<a href="' + href + '" target="_blank" ' + (title ? ('title="' + title + '"') : '') + '>' + text + '</a>';
+    };
+    markedR.image = function(href, title, text) {
+        var href = href || '',
+            title = title || '',
+            text = text || '';
+        return '<img src="' + href + '" alt="' + text + '" target="_blank" class="img-responsive rounded" ' + (title ? ('title="' + title + '"') : '') + (this.options.xhtml ? '/>' : '>');
+    };
+
     $cntnts = $('#CNTNTS');
+
     $(document).ready(function() {
-        var curcntnt = $cntnts.html();
-        // console.log(curcntnt);
-        $cntnts.html(marked(curcntnt));
+        var curcntnt = $cntnts.text();
+        var markedcntnt = marked(curcntnt, {
+            renderer: markedR
+        });
+        console.log(curcntnt);
+        console.log(markedcntnt);
+        $cntnts.html(markedcntnt);
     });
 </script>

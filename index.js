@@ -51,21 +51,14 @@ function assetsCacheControl(res, path) {
     }
 }
 
-function escapeHtml(text, rNndR) {
-    var rNndR = rNndR || false;
-    var map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    text.replace(/[&<>"']/g, function(m) { return map[m]; });
-    if (rNndR) {
-        text = text.replace(/(?:\r?\n|\r)/gm, '\n');
-    }
-
-    return text
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/<((?:.|\s)*)>((?:.|\s)*)<(\/\1)>/gmi, `&lt;\$1&gt;\$2&lt;\$3&gt;`)
+        // .replace(/</g, "&lt;")
+        // .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
@@ -250,7 +243,8 @@ function defaultB(req, res) {
             bloglist_HTML += '<li><a href="/b/' + BRx + '/' + Bx + '">' + Bx + '</a><ul>';
             for (var Ex in By["entries"]) {
                 var Ey = By["entries"][Ex];
-                bloglist_HTML += '<li><a href="/b/' + BRx + '/' + Bx + '/' + Ex + '">' + Ey["created"]["year"] + '-' + Ey["created"]["month"] + '-' + Ey["created"]["day"] + ' - ' + Ey["title"] + '</a>';
+                var dtC = Ey["created"];
+                bloglist_HTML += '<li><a href="/b/' + BRx + '/' + Bx + '/' + Ex + '">' + dtC["year"] + '-' + dtC["month"] + '-' + dtC["day"] + ' ' + dtC["hours"] + ':' + dtC["minutes"] + ':' + dtC["seconds"] + ' - ' + Ey["title"] + '</a></li>';
             }
             bloglist_HTML += '</ul></li>';
         }
@@ -306,7 +300,8 @@ app.get('/b/:blogr', function(req, res) {
             blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '">' + Bx + '</a><ul>';
             for (var Ex in By["entries"]) {
                 var Ey = By["entries"][Ex];
-                blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '/' + Ex + '">' + Ey["created"]["year"] + '-' + Ey["created"]["month"] + '-' + Ey["created"]["day"] + ' - ' + Ey["title"] + '</a>';
+                var dtC = Ey["created"];
+                blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '/' + Ex + '">' + dtC["year"] + '-' + dtC["month"] + '-' + dtC["day"] + ' ' + dtC["hours"] + ':' + dtC["minutes"] + ':' + dtC["seconds"] + ' - ' + Ey["title"] + '</a></li>';
             }
             blogslist_HTML += '</ul></li>';
         };
@@ -357,7 +352,8 @@ app.get('/b/:blogr/:blogid', function(req, res) {
             var entrieslist_HTML = '<ul>';
             for (var Ex in jsonF_L[blogr]["blogs"][blogid]["entries"]) {
                 var Ey = jsonF_L[blogr]["blogs"][blogid]["entries"][Ex];
-                entrieslist_HTML += '<li><a href="/b/' + blogr + '/' + blogid + '/' + Ex + '">' + Ey["created"]["year"] + '-' + Ey["created"]["month"] + '-' + Ey["created"]["day"] + ' - ' + Ey["title"] + '</a></li>';
+                var dtC = Ey["created"];
+                entrieslist_HTML += '<li><a href="/b/' + blogr + '/' + blogid + '/' + Ex + '">' + dtC["year"] + '-' + dtC["month"] + '-' + dtC["day"] + ' ' + dtC["hours"] + ':' + dtC["minutes"] + ':' + dtC["seconds"] + ' - ' + Ey["title"] + '</a></li>';
             }
             entrieslist_HTML += '</ul>';
 
@@ -392,20 +388,27 @@ app.get('/b/:blogr/:blogid/:entryid', function(req, res) {
                 var entry = jsonF_L[blogr]["blogs"][blogid]["entries"][entryid];
 
                 var title = entry["title"];
-                var c_year = entry["created"]["year"],
-                    c_month = entry["created"]["month"],
-                    c_day = entry["created"]["day"];
-                var rpath = dir + 'DB/Blogs/' + blogr + '/' + blogid + '/' + c_year + '-' + c_month + '-' + c_day + '-' + title;
+                var Dy = entry["created"]["year"],
+                    Dm = entry["created"]["month"],
+                    Dd = entry["created"]["day"],
+                    Dh = entry["created"]["hours"],
+                    Dm2 = entry["created"]["minutes"],
+                    Ds = entry["created"]["seconds"];
+
+                var rpath = dir + 'DB/Blogs/' + blogr + '/' + blogid + '/' + Dy + '-' + Dm + '-' + Dd + '_' + Dh + '-' + Dm2 + '-' + Ds + '_' + title;
                 var cntnts = fs.readFileSync(rpath, 'utf8');
 
                 var sHTML = HTML_blogrs_blogs_entry();
                 res.send(HTMLcmbnr(sHTML
-                    .replace(/\{CONTENT\}/gm, cntnts)
+                    .replace(/\{CONTENT\}/gm, escapeHtml(cntnts))
                     .replace(/\{BLOGR_NAME\}/gm, blogr)
                     .replace(/\{BLOG_NAME\}/gm, blogid)
-                    .replace(/\{ENTRY_year\}/gm, c_year)
-                    .replace(/\{ENTRY_month\}/gm, c_month)
-                    .replace(/\{ENTRY_day\}/gm, c_day)
+                    .replace(/\{ENTRY_year\}/gm, Dy)
+                    .replace(/\{ENTRY_month\}/gm, Dm)
+                    .replace(/\{ENTRY_day\}/gm, Dd)
+                    .replace(/\{ENTRY_hours\}/gm, Dh)
+                    .replace(/\{ENTRY_minutes\}/gm, Dm2)
+                    .replace(/\{ENTRY_seconds\}/gm, Ds)
                     .replace(/\{ENTRY_ID\}/gm, entryid)
                     .replace(/\{ENTRY_TITLE\}/gm, title), req));
             } else {
@@ -448,20 +451,26 @@ app.post('/mb/ecreate/:blogid', function(req, res) {
 
             if (entry_title !== '' && entry_cntnts !== '') {
                 var dt = new Date();
-                var y = dt.getFullYear(),
-                    m = dt.getMonth() + 1,
-                    d = dt.getDate();
+                var Dy = dt.getFullYear(),
+                    Dm = dt.getMonth() + 1,
+                    Dd = dt.getDate(),
+                    Dh = dt.getHours(),
+                    Dm2 = dt.getMinutes(),
+                    Ds = dt.getSeconds();
 
-                var wpath = dir + 'DB/Blogs/' + unameL + '/' + blogid + '/' + y + '-' + m + '-' + d + '-' + entry_title;
+                var wpath = dir + 'DB/Blogs/' + unameL + '/' + blogid + '/' + Dy + '-' + Dm + '-' + Dd + '_' + Dh + '-' + Dm2 + '-' + Ds + '_' + entry_title;
                 if (!fs.existsSync(wpath)) {
                     fs.writeFileSync(wpath, entry_cntnts, 'utf8');
 
                     jsonF_L[unameL]["blogs"][blogid]["entries"].push({
                         "title": entry_title,
                         "created": {
-                            "year": y,
-                            "month": m,
-                            "day": d
+                            "year": Dy,
+                            "month": Dm,
+                            "day": Dd,
+                            "hours": Dh,
+                            "minutes": Dm2,
+                            "seconds": Ds
                         }
                     });
 
@@ -512,9 +521,12 @@ app.post('/mb/create', function(req, res) {
                     // var hash2 = crypto.createHash('sha256').update(unameL + blog_name).digest('base64').replace(/[^a-z0-9]+/gi, '_');
 
                     var dt = new Date();
-                    var y = dt.getFullYear(),
-                        m = dt.getMonth() + 1,
-                        d = dt.getDate();
+                    var Dy = dt.getFullYear(),
+                        Dm = dt.getMonth() + 1,
+                        Dd = dt.getDate(),
+                        Dh = dt.getHours(),
+                        Dm2 = dt.getMinutes(),
+                        Ds = dt.getSeconds();
 
                     var wpath = dir + 'DB/Blogs/' + unameL + '/' + blog_name + '/';
 
@@ -524,9 +536,12 @@ app.post('/mb/create', function(req, res) {
 
                         jsonF_L[unameL]["blogs"][blog_name] = {
                             "created": {
-                                "year": y,
-                                "month": m,
-                                "day": d
+                                "year": Dy,
+                                "month": Dm,
+                                "day": Dd,
+                                "hours": Dh,
+                                "minutes": Dm2,
+                                "seconds": Ds
                             },
                             "entries": []
                         };
