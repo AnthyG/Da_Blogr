@@ -160,12 +160,13 @@ function MBS(req, res) {
     var blogrslistalready_HTML = '<dl>';
     for (var Ux in jsonF_L) {
         var Uy = jsonF_L[Ux];
-        blogrslistalready_HTML += '<dt>' + Ux + '</dt><dd><ul>';
+        blogrslistalready_HTML += '<dt><a href="/b/' + Ux + '">' + Ux + '</a></dt><dd><ul>';
         var html2 = '';
         if (typeof Uy["blogs"][0] !== 'undefined') {
-            Uy["blogs"].forEach(function(By, Bx) {
-                html2 += '<li><a href="/b/' + user_name + '/' + By["title"] + '">' + By["title"] + '</a></li>';
-            });
+            for (var Bx in Uy["blogs"]) {
+                var By = Uy["blogs"][Bx];
+                blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '">' + Bx + '</a></li>';
+            };
             blogrslistalready_HTML += html2;
         }
         blogrslistalready_HTML += '</ul></dd>';
@@ -225,20 +226,44 @@ function defaultB(req, res) {
     var sHTML = HTML_blogpanel();
 
     var A_topcntnt_HTML = '',
-        B_topcntnt_HTML = '';
+        B_topcntnt_HTML = '',
+        A_bottomcntnt_HTML = '',
+        B_bottomcntnt_HTML = '';
 
     if (isLI(req)) {
         if (isA(req)) {
             A_topcntnt_HTML = HTML_A_topcntnt_1();
-        } else {
-            B_topcntnt_HTML = HTML_B_topcntnt_1();
+            // A_bottomcntnt_HTML = HTML_A_bottomcntnt_1();
         }
+        B_topcntnt_HTML = HTML_B_topcntnt_1();
+        // B_bottomcntnt_HTML = HTML_B_bottomcntnt_1();
     }
+
+    var jsonF_L = jsonF_Ls;
+
+    var bloglist_HTML = '<ul>';
+    for (var BRx in jsonF_L) {
+        var BRy = jsonF_L[BRx]["blogs"];
+        bloglist_HTML += '<li><a href="/b/' + BRx + '">' + BRx + '</a><ul>';
+        for (var Bx in BRy) {
+            var By = BRy[Bx];
+            bloglist_HTML += '<li><a href="/b/' + BRx + '/' + Bx + '">' + Bx + '</a><ul>';
+            for (var Ex in By["entries"]) {
+                var Ey = By["entries"][Ex];
+                bloglist_HTML += '<li><a href="/b/' + BRx + '/' + Bx + '/' + Ex + '">' + Ey["created"]["year"] + '-' + Ey["created"]["month"] + '-' + Ey["created"]["day"] + ' - ' + Ey["title"] + '</a>';
+            }
+            bloglist_HTML += '</ul></li>';
+        }
+        bloglist_HTML += '</ul></li>';
+    }
+    bloglist_HTML += '</ul>';
 
     res.send(HTMLcmbnr(sHTML
         .replace(/\{A_topcntnt\}/, A_topcntnt_HTML)
         .replace(/\{B_topcntnt\}/, B_topcntnt_HTML)
-        .replace(/\{BLOG_LIST\}/gm, ''), req));
+        .replace(/\{A_bottomcntnt\}/, A_bottomcntnt_HTML)
+        .replace(/\{B_bottomcntnt\}/, B_bottomcntnt_HTML)
+        .replace(/\{BLOG_LIST\}/gm, bloglist_HTML), req));
 }
 
 // Get all blogr's blogs and entries
@@ -252,26 +277,43 @@ app.get('/b/:blogr', function(req, res) {
     var jsonF_L = jsonF_Ls;
 
     if (jsonF_L.hasOwnProperty(blogr)) {
-        var psss = [];
-        psss[0] = undefined;
-        if (typeof req.params[0] !== 'undefined') {
-            psss = req.params[0].split('/');
-        }
+        var sHTML = HTML_blogrs_blogs();
+
+        var A_topcntnt_HTML = '',
+            B_topcntnt_HTML = '',
+            A_bottomcntnt_HTML = '',
+            B_bottomcntnt_HTML = '';
+
         if (isLI(req)) {
             var user_name = req.session.user_name;
+            if (isA(req)) {
+                // A_topcntnt_HTML = HTML_A_topcntnt_2();
+                // A_bottomcntnt_HTML = HTML_A_bottomcntnt_2();
+            }
+            B_topcntnt_HTML = HTML_B_topcntnt_2();
+            B_bottomcntnt_HTML = HTML_B_bottomcntnt_2();
+
+            if (user_name === blogr) {
+
+            }
         }
 
         var jsonF_L = jsonF_Ls;
 
         var blogslist_HTML = '<ul>';
-        jsonF_L[blogr]["blogs"].forEach(function(By, Bx) {
-            blogslist_HTML += '<li><a href="/b/' + blogr + '/' + By["title"] + '">' + By["title"] + '</a></li>';
-        });
+        for (var Bx in jsonF_L[blogr]["blogs"]) {
+            var By = jsonF_L[blogr]["blogs"][Bx];
+            blogslist_HTML += '<li><a href="/b/' + blogr + '/' + Bx + '">' + Bx + '</a></li>';
+        };
         blogslist_HTML += '</ul>';
 
-        var sHTML = HTML_blogsmanager();
         res.send(HTMLcmbnr(sHTML
-            .replace(/\{BLOGS_LIST\}/gm, blogslist_HTML), req));
+            .replace(/\{A_topcntnt\}/, A_topcntnt_HTML)
+            .replace(/\{B_topcntnt\}/, B_topcntnt_HTML)
+            .replace(/\{A_bottomcntnt\}/, A_bottomcntnt_HTML)
+            .replace(/\{B_bottomcntnt\}/, B_bottomcntnt_HTML)
+            .replace(/\{BLOGS_LIST\}/gm, blogslist_HTML)
+            .replace(/\{BLOGR_NAME\}/gm, blogr), req));
     } else {
         res.send('No blogr <i>' + blogr + '</i>');
     }
@@ -285,10 +327,48 @@ app.get('/b/:blogr/:blogid', function(req, res) {
     var jsonF_L = jsonF_Ls;
 
     if (jsonF_L.hasOwnProperty(blogr)) {
-        res.send({
-            "blogr": blogr,
-            "blogid": blogid
-        });
+        if (jsonF_L[blogr]["blogs"].hasOwnProperty(blogid)) {
+            var sHTML = HTML_blogrs_blogs_entries();
+
+            var A_topcntnt_HTML = '',
+                B_topcntnt_HTML = '',
+                A_bottomcntnt_HTML = '',
+                B_bottomcntnt_HTML = '';
+
+            if (isLI(req)) {
+                var user_name = req.session.user_name;
+                if (isA(req)) {
+                    // A_topcntnt_HTML = HTML_A_topcntnt_3();
+                    // A_bottomcntnt_HTML = HTML_A_bottomcntnt_3();
+                }
+                // B_topcntnt_HTML = HTML_B_topcntnt_3();
+                // B_bottomcntnt_HTML = HTML_B_bottomcntnt_3();
+            }
+
+            var entrieslist_HTML = '<ul>';
+            for (var Ex in jsonF_L[blogr]["blogs"][blogid]["entries"]) {
+                var Ey = jsonF_L[blogr]["blogs"][blogid]["entries"][Ex];
+                entrieslist_HTML += '<li><a href="/b/' + blogr + '/' + blogid + '/' + Ex + '">' + Ey.title + '</a></li>';
+            }
+            entrieslist_HTML += '</ul>';
+
+            res.send(HTMLcmbnr(sHTML
+                .replace(/\{A_topcntnt\}/, A_topcntnt_HTML)
+                .replace(/\{B_topcntnt\}/, B_topcntnt_HTML)
+                .replace(/\{A_bottomcntnt\}/, A_bottomcntnt_HTML)
+                .replace(/\{B_bottomcntnt\}/, B_bottomcntnt_HTML)
+                .replace(/\{ENTRYCREATOR\}/gm, HTML_entrycreator())
+                .replace(/\{ENTRIES_LIST\}/gm, entrieslist_HTML)
+                .replace(/\{BLOGR_NAME\}/gm, blogr)
+                .replace(/\{BLOG_NAME\}/gm, blogid), req));
+            // res.send({
+            //     "blogr": blogr,
+            //     "blogid": blogid,
+            //     "entries": jsonF_L[blogr]["blogs"][blogid]["entries"]
+            // });
+        } else {
+            res.send('Blogr <i>' + blogr + '</i> has no blog <i>' + blogid + '</i>');
+        }
     } else {
         res.send('No blogr <i>' + blogr + '</i>');
     }
@@ -303,25 +383,95 @@ app.get('/b/:blogr/:blogid/:entryid', function(req, res) {
     var jsonF_L = jsonF_Ls;
 
     if (jsonF_L.hasOwnProperty(blogr)) {
-        res.send({
-            "blogr": blogr,
-            "blogid": blogid,
-            "entryid": entryid
-        });
+        if (jsonF_L[blogr]["blogs"].hasOwnProperty(blogid)) {
+            if (typeof jsonF_L[blogr]["blogs"][blogid]["entries"][entryid] !== 'undefined') {
+                var entry = jsonF_L[blogr]["blogs"][blogid]["entries"][entryid];
+
+                var title = entry["title"];
+                var rpath = dir + 'DB/Blogs/' + blogr + '/' + blogid + '/' + entry["created"]["year"] + '-' + entry["created"]["month"] + '-' + entry["created"]["day"] + '-' + title;
+                var cntnts = fs.readFileSync(rpath, 'utf8');
+
+                var sHTML = HTML_blogrs_blogs_entry();
+                res.send(HTMLcmbnr(sHTML
+                    .replace(/\{CONTENT\}/gm, cntnts)
+                    .replace(/\{BLOGR_NAME\}/gm, blogr)
+                    .replace(/\{BLOG_NAME\}/gm, blogid)
+                    .replace(/\{ENTRY_ID\}/gm, entryid)
+                    .replace(/\{ENTRY_TITLE\}/gm, title), req));
+                // res.send({
+                //     "blogr": blogr,
+                //     "blogid": blogid,
+                //     "entryid": entryid
+                // });
+            } else {
+                res.send('Blog <i>' + blogid + '</i> by Blogr <i>' + blogr + '</i> has no Entry <i>' + entryid + '</i>');
+            }
+        } else {
+            res.send('Blogr <i>' + blogr + '</i> has no blog <i>' + blogid + '</i>');
+        }
     } else {
         res.send('No blogr <i>' + blogr + '</i>');
     }
 });
 
 // Post new entry to blog
-app.post('/b/:blogr/:blogid', function(req, res) {
+app.post('/mb/ecreate/:blogid', function(req, res) {
     if (isLI(req)) {
-        var blogr = req.params.blogr,
-            blogid = req.params.blogid;
+        // is logged in
+        var body = '';
 
-        res.send({
-            "blogr": blogr,
-            "blogid": blogid
+        req.on('data', function(data) {
+            body += data;
+
+            // Too much POST data, kill the connection!
+            // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+            if (body.length > 1e6) {
+                req.connection.destroy();
+            }
+        });
+        req.on('end', function() {
+            var post = qs.parse(body);
+
+            var jsonF_L = jsonF_Ls;
+
+            var unameL = req.session.user_name,
+                blogid = req.params.blogid;
+
+            // Verify post
+            var entry_title = post.entry_title || '',
+                entry_cntnts = post.entry_cntnts || '';
+
+            if (entry_title !== '' && entry_cntnts !== '') {
+                var dt = new Date();
+                var y = dt.getFullYear(),
+                    m = dt.getMonth() + 1,
+                    d = dt.getDate();
+
+                var wpath = dir + 'DB/Blogs/' + unameL + '/' + blogid + '/' + y + '-' + m + '-' + d + '-' + entry_title;
+                fs.writeFileSync(wpath, entry_cntnts, 'utf8');
+
+                jsonF_L[unameL]["blogs"][blogid]["entries"].push({
+                    "title": entry_title,
+                    "created": {
+                        "year": y,
+                        "month": m,
+                        "day": d
+                    }
+                });
+
+                var wpath2 = dir + 'DB/Login.json';
+                console.log("\n" + Date().toString() + ":\n" + JSON.stringify(jsonF_L));
+                fs.writeFileSync(wpath2, JSON.stringify(jsonF_L), 'utf8');
+
+                res.redirect('/b/' + unameL + '/' + blogid + '?posted');
+
+                // res.send({
+                //     "blogr": unameL,
+                //     "blogid": blogid
+                // });
+            } else {
+                res.send('invalid input!');
+            }
         });
     } else {
         res.status(400);
@@ -329,7 +479,7 @@ app.post('/b/:blogr/:blogid', function(req, res) {
 });
 
 // Create new blog
-app.post('/mb', function(req, res) {
+app.post('/mb/create', function(req, res) {
     if (isLI(req)) {
         // is logged in
         var body = '';
@@ -354,24 +504,35 @@ app.post('/mb', function(req, res) {
             if (blog_name !== '') {
                 // var unameL = req.session.user_name.toLowerCase();
                 var unameL = req.session.user_name;
-                if (jsonF_L[unameL]["blogs"].indexOf(blog_name) === -1) {
-                    var hash2 = crypto.createHash('sha256').update(unameL + blog_name).digest('base64').replace(/[^a-z0-9]+/gi, '_');
-                    jsonF_L[unameL]["blogs"].push({
-                        "title": blog_name,
-                        "id": hash2
-                    });
+                if (!jsonF_L[unameL]["blogs"].hasOwnProperty(blog_name)) {
+                    // var hash2 = crypto.createHash('sha256').update(unameL + blog_name).digest('base64').replace(/[^a-z0-9]+/gi, '_');
 
-                    var wpath = dir + 'DB/Login.json';
-                    console.log("\n" + Date().toString() + ":\n" + JSON.stringify(jsonF_L));
-                    fs.writeFileSync(wpath, JSON.stringify(jsonF_L), 'utf8');
+                    var dt = new Date();
+                    var y = dt.getFullYear(),
+                        m = dt.getMonth() + 1,
+                        d = dt.getDate();
 
-                    var wpath2 = dir + 'DB/Blogs/' + hash2 + '';
-                    fs.writeFile(wpath2, '', 'utf8', function(err) {
+                    var wpath = dir + 'DB/Blogs/' + unameL + '/' + blog_name + '/';
+
+                    fs.mkdir(wpath, function(err) {
                         if (err) console.log("\n" + Date().toString() + ":\n" + err);
-                        console.log("\n" + Date().toString() + ":\n" + 'Saved ' + wpath2);
-                    });
+                        console.log("\n" + Date().toString() + ":\n" + 'Created ' + wpath);
 
-                    res.redirect('/mb?success');
+                        jsonF_L[unameL]["blogs"][blog_name] = {
+                            "created": {
+                                "year": y,
+                                "month": m,
+                                "day": d
+                            },
+                            "entries": []
+                        };
+
+                        var wpath2 = dir + 'DB/Login.json';
+                        console.log("\n" + Date().toString() + ":\n" + JSON.stringify(jsonF_L));
+                        fs.writeFileSync(wpath2, JSON.stringify(jsonF_L), 'utf8');
+
+                        res.redirect('/b/' + unameL + '/' + blog_name + '?created');
+                    });
                 } else {
                     res.send('blog <i>' + blog_name + '</i> does already exist!');
                 }
@@ -379,6 +540,8 @@ app.post('/mb', function(req, res) {
                 res.send('invalid input!');
             }
         });
+    } else {
+        res.status(400);
     }
 });
 
@@ -418,14 +581,14 @@ app.post('/mbs', function(req, res) {
                 if (!jsonF_L.hasOwnProperty(unameL)) {
                     jsonF_L[unameL] = {
                         "pass": crypto.createHash('sha256').update(user_pass).digest('base64'),
-                        "blogs": [],
+                        "blogs": {},
                         "isadmin": isadmin
                     };
 
                     var wpath = dir + 'DB/Login.json';
                     console.log("\n" + Date().toString() + ":\n" + JSON.stringify(jsonF_L));
                     fs.writeFile(wpath, JSON.stringify(jsonF_L), 'utf8');
-                    fs.mkdir(dir + 'DB/' + unameL);
+                    fs.mkdir(dir + 'DB/Blogs/' + unameL);
 
                     res.redirect('/mbs?success');
                 } else {
@@ -513,8 +676,14 @@ var HTMLSSs = {
     "A_topcntnt_1": dirA + 'A_topcntnt_1',
     "blogrsmanager": dirA + 'blogrsmanager',
     "B_topcntnt_1": dirB + 'B_topcntnt_1',
-    "blogsmanager": dirB + 'blogsmanager',
-    "blogpanel": dirP + 'blogpanel'
+    "B_topcntnt_2": dirB + 'B_topcntnt_2',
+    "B_topcntnt_3": dirB + 'B_topcntnt_3',
+    "B_bottomcntnt_2": dirB + 'B_bottomcntnt_2',
+    "entrycreator": dirB + 'entrycreator',
+    "blogpanel": dirP + 'blogpanel',
+    "blogrs_blogs": dirP + 'blogrs_blogs',
+    "blogrs_blogs_entries": dirP + 'blogrs_blogs_entries',
+    "blogrs_blogs_entry": dirP + 'blogrs_blogs_entry'
 };
 var HTML_HEADEr,
     HTML_FOOTEr,
@@ -523,8 +692,14 @@ var HTML_HEADEr,
     HTML_A_topcntnt_1,
     HTML_blogrsmanager,
     HTML_B_topcntnt_1,
-    HTML_blogsmanager,
-    HTML_blogpanel;
+    HTML_B_topcntnt_2,
+    HTML_B_topcntnt_3,
+    HTML_B_bottomcntnt_2,
+    HTML_entrycreator,
+    HTML_blogpanel,
+    HTML_blogrs_blogs,
+    HTML_blogrs_blogs_entries,
+    HTML_blogrs_blogs_entry;
 
 function HTMLgen(htmlSxP, htmlSyP) {
     eval('HTML_' + htmlSxP + ' = function() { return fs.readFileSync(htmlSyP + ".min.html").toString(); }');
@@ -537,14 +712,18 @@ for (var htmlSx in HTMLSSs) {
 
 var jsonF_Ls = JSON.parse(fs.readFileSync(dir + 'DB/Login.json', 'utf8'));
 
+fs.watchFile(dir + 'DB/Login.json', function(curr, prev) {
+    jsonF_Ls = JSON.parse(fs.readFileSync(dir + 'DB/Login.json', 'utf8'));
+});
+
 setInterval(function() {
     for (var htmlSx in HTMLSSs) {
         var htmlSy = HTMLSSs[htmlSx];
         HTMLgen(htmlSx, htmlSy);
     }
 
-    fs.readFile(dir + 'DB/Login.json', 'utf8', function(err, data) {
-        if (err) console.log("\n" + Date().toString() + ":\n" + err);
-        jsonF_Ls = JSON.parse(data);
-    });
+    // fs.readFile(dir + 'DB/Login.json', 'utf8', function(err, data) {
+    //     if (err) console.log("\n" + Date().toString() + ":\n" + err);
+    //     jsonF_Ls = JSON.parse(data);
+    // });
 });
