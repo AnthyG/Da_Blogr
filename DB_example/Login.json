@@ -1,0 +1,29 @@
+{
+    "Admin": {
+        "pass": "bKE9UspwyIPg8LsQHkJaiehiTeUdstI5JZOvaoQRgJA=",
+        "blogs": {
+            "Changelog": {
+                "created": {
+                    "year": 2017,
+                    "month": 3,
+                    "day": 5,
+                    "hours": 14,
+                    "minutes": 39,
+                    "seconds": 25
+                },
+                "entries": [{
+                    "title": "Markdown Guide",
+                    "created": {
+                        "year": 2017,
+                        "month": 3,
+                        "day": 5,
+                        "hours": 17,
+                        "minutes": 23,
+                        "seconds": 14
+                    }
+                }]
+            }
+        },
+        "isadmin": true
+    }
+}
