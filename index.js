@@ -54,7 +54,7 @@ function assetsCacheControl(res, path) {
 function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
-        .replace(/<((?:.|\s)*)>((?:.|\s)*)<(\/\1)>/gmi, `&lt;\$1&gt;\$2&lt;\$3&gt;`)
+        .replace(/<((?:.|\s)*)>((?:.|\s)*)<(\/\1)>/gmi, '&lt;\$1&gt;\$2&lt;\$3&gt;')
         // .replace(/</g, "&lt;")
         // .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
